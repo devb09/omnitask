@@ -3,6 +3,7 @@ import { format, isPast, isToday } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { useTaskStore } from '../stores/taskStore'
 import { CheckIcon, PencilIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { toast } from 'react-toastify'
 
 const TaskItem = ({ task }) => {
   const { toggleTaskStatus, updateTask, deleteTask } = useTaskStore()
@@ -38,6 +39,33 @@ const TaskItem = ({ task }) => {
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que deseas eliminar esta tarea?')) {
       deleteTask(task.id)
+      
+      // Mostrar notificación al eliminar una tarea según su prioridad
+      if (task.priority === 'high') {
+        toast.error(
+          `Tarea importante eliminada: ${task.title}`,
+          {
+            icon: '🗑️',
+            className: 'toast-high-priority'
+          }
+        )
+      } else if (task.priority === 'medium') {
+        toast.error(
+          `Tarea eliminada: ${task.title}`,
+          {
+            icon: '🗑️',
+            className: 'toast-medium-priority'
+          }
+        )
+      } else {
+        toast.error(
+          `Tarea eliminada: ${task.title}`,
+          {
+            icon: '🗑️',
+            className: 'toast-low-priority'
+          }
+        )
+      }
     }
   }
 
@@ -45,6 +73,72 @@ const TaskItem = ({ task }) => {
     e.preventDefault()
     updateTask(task.id, editedTask)
     setIsEditing(false)
+    
+    // Mostrar notificación si se editó una tarea de alta prioridad
+    if (editedTask.priority === 'high') {
+      // Si la prioridad cambió a alta
+      if (task.priority !== 'high') {
+        toast.info(
+          `Tarea actualizada a prioridad alta: ${editedTask.title}`,
+          {
+            icon: '🔔',
+            className: 'toast-high-priority'
+          }
+        )
+      } 
+      // Si ya era alta prioridad pero se modificó
+      else {
+        toast.info(
+          `Tarea importante actualizada: ${editedTask.title}`,
+          {
+            icon: '📝',
+            className: 'toast-high-priority'
+          }
+        )
+      }
+    } else if (editedTask.priority === 'medium') {
+      // Si la prioridad cambió a media
+      if (task.priority !== 'medium') {
+        toast.info(
+          `Tarea actualizada a prioridad media: ${editedTask.title}`,
+          {
+            icon: '📌',
+            className: 'toast-medium-priority'
+          }
+        )
+      } 
+      // Si ya era prioridad media pero se modificó
+      else {
+        toast.info(
+          `Tarea actualizada: ${editedTask.title}`,
+          {
+            icon: '📝',
+            className: 'toast-medium-priority'
+          }
+        )
+      }
+    } else {
+      // Si la prioridad cambió a baja
+      if (task.priority !== 'low') {
+        toast.info(
+          `Tarea actualizada a prioridad baja: ${editedTask.title}`,
+          {
+            icon: '📋',
+            className: 'toast-low-priority'
+          }
+        )
+      } 
+      // Si ya era prioridad baja pero se modificó
+      else {
+        toast.info(
+          `Tarea actualizada: ${editedTask.title}`,
+          {
+            icon: '📝',
+            className: 'toast-low-priority'
+          }
+        )
+      }
+    }
   }
 
   const handleCancelEdit = () => {

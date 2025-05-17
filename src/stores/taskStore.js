@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { format } from 'date-fns'
+import { format, isToday, isTomorrow, isPast, differenceInDays } from 'date-fns'
+import { toast } from 'react-toastify'
 
 // Definición de estados iniciales
 const initialProjects = [
@@ -82,6 +83,18 @@ export const useTaskStore = create(
         set((state) => ({
           tasks: [...state.tasks, newTask],
         }))
+        
+        // Mostrar notificación para tareas de alta prioridad
+        if (newTask.priority === 'high') {
+          toast.info(
+            `¡Nueva tarea importante: ${newTask.title}!`, 
+            {
+              icon: '🔔',
+              className: 'toast-high-priority'
+            }
+          )
+        }
+        
         return newTask
       },
       
@@ -100,16 +113,62 @@ export const useTaskStore = create(
       },
       
       toggleTaskStatus: (id) => {
-        set((state) => ({
-          tasks: state.tasks.map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  status: task.status === 'pending' ? 'completed' : 'pending',
-                }
-              : task
-          ),
-        }))
+        let completedHighPriorityTask = null;
+        let completedMediumPriorityTask = null;
+        let completedLowPriorityTask = null;
+        
+        set((state) => {
+          const taskToUpdate = state.tasks.find(task => task.id === id);
+          
+          // Guardar referencia si es una tarea que se está completando según su prioridad
+          if (taskToUpdate && taskToUpdate.status === 'pending') {
+            if (taskToUpdate.priority === 'high') {
+              completedHighPriorityTask = { ...taskToUpdate };
+            } else if (taskToUpdate.priority === 'medium') {
+              completedMediumPriorityTask = { ...taskToUpdate };
+            } else {
+              completedLowPriorityTask = { ...taskToUpdate };
+            }
+          }
+          
+          return {
+            tasks: state.tasks.map((task) =>
+              task.id === id
+                ? {
+                    ...task,
+                    status: task.status === 'pending' ? 'completed' : 'pending',
+                  }
+                : task
+            ),
+          };
+        });
+        
+        // Mostrar notificación cuando se completa una tarea según su prioridad
+        if (completedHighPriorityTask) {
+          toast.success(
+            `¡Tarea importante completada: ${completedHighPriorityTask.title}!`,
+            {
+              icon: '✅',
+              className: 'toast-task-completed toast-high-priority'
+            }
+          );
+        } else if (completedMediumPriorityTask) {
+          toast.success(
+            `Tarea completada: ${completedMediumPriorityTask.title}`,
+            {
+              icon: '✅',
+              className: 'toast-task-completed toast-medium-priority'
+            }
+          );
+        } else if (completedLowPriorityTask) {
+          toast.success(
+            `Tarea completada: ${completedLowPriorityTask.title}`,
+            {
+              icon: '✅',
+              className: 'toast-task-completed toast-low-priority'
+            }
+          );
+        }
       },
       
       // Acciones para filtros
@@ -183,6 +242,49 @@ export const useTaskStore = create(
             }
             return 0
           })
+      },
+      
+      // Verificar tareas próximas a vencer y mostrar notificaciones
+      checkDueTasks: () => {
+        const { tasks } = get()
+        const pendingTasks = tasks.filter(task => task.status === 'pending' && task.dueDate)
+        
+        pendingTasks.forEach(task => {
+          const dueDate = new Date(task.dueDate)
+          const today = new Date()
+          
+          // Notificar tareas de alta prioridad que vencen hoy o mañana
+          if (task.priority === 'high') {
+            if (isToday(dueDate)) {
+              toast.warning(
+                `¡Tarea importante vence HOY: ${task.title}!`,
+                {
+                  icon: '⚠️',
+                  className: 'toast-due-today'
+                }
+              )
+            } else if (isTomorrow(dueDate)) {
+              toast.info(
+                `Tarea importante vence MAÑANA: ${task.title}`,
+                {
+                  icon: '📅',
+                  className: 'toast-due-tomorrow'
+                }
+              )
+            }
+          }
+          
+          // Notificar tareas de prioridad media que vencen hoy
+          if (task.priority === 'medium' && isToday(dueDate)) {
+            toast.info(
+              `Tarea vence hoy: ${task.title}`,
+              {
+                icon: '📌',
+                className: 'toast-medium-priority'
+              }
+            )
+          }
+        })
       },
     }),
     {

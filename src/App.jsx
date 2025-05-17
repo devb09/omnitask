@@ -5,6 +5,8 @@ import Dashboard from './pages/Dashboard'
 import ProjectPage from './pages/ProjectPage'
 import NotFound from './pages/NotFound'
 import { useThemeStore } from './stores/themeStore'
+import { ToastContainer } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
 function App() {
   const { darkMode, setDarkMode } = useThemeStore()
@@ -25,6 +27,18 @@ function App() {
         <Route path="/project/:projectId" element={<ProjectPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <ToastContainer 
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme={darkMode ? 'dark' : 'light'}
+      />
     </Layout>
   )
 }

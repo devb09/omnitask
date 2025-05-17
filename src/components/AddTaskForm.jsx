@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTaskStore } from '../stores/taskStore'
 import { XMarkIcon } from '@heroicons/react/24/outline'
+import { toast } from 'react-toastify'
 
 const AddTaskForm = ({ projectId, onClose }) => {
   const { addTask } = useTaskStore()
@@ -22,6 +23,26 @@ const AddTaskForm = ({ projectId, onClose }) => {
     e.preventDefault()
     if (task.title.trim()) {
       addTask(task)
+      
+      // Mostrar notificaciones según la prioridad de la tarea
+      if (task.priority === 'medium') {
+        toast.info(
+          `Nueva tarea creada: ${task.title}`,
+          {
+            icon: '📝',
+            className: 'toast-medium-priority'
+          }
+        )
+      } else if (task.priority === 'low') {
+        toast.info(
+          `Nueva tarea creada: ${task.title}`,
+          {
+            icon: '📋',
+            className: 'toast-low-priority'
+          }
+        )
+      }
+      
       onClose()
     }
   }

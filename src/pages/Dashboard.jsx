@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useTaskStore } from '../stores/taskStore'
 import TaskFilters from '../components/TaskFilters'
 import TaskItem from '../components/TaskItem'
@@ -6,11 +6,16 @@ import AddTaskForm from '../components/AddTaskForm'
 import { PlusIcon } from '@heroicons/react/24/outline'
 
 const Dashboard = () => {
-  const { projects, getAllTasks } = useTaskStore()
+  const { projects, getAllTasks, checkDueTasks } = useTaskStore()
   const [showAddForm, setShowAddForm] = useState(false)
   const [selectedProjectId, setSelectedProjectId] = useState(projects[0]?.id || '')
   
   const tasks = getAllTasks()
+  
+  // Verificar tareas próximas a vencer al cargar el componente
+  useEffect(() => {
+    checkDueTasks()
+  }, [checkDueTasks])
   
   const handleAddTask = () => {
     setShowAddForm(true)
